@@ -7,11 +7,15 @@ from plotly import graph_objects as go
 
 
 def get_stock_data(ticker, start, end):
+    from curl_cffi import requests
+    session = requests.Session(impersonate="chrome")
     ticker_data = yf.download(
-        ticker, start, end
+        ticker, start, end,
+        session=session
     )  # downloading the stock data from START to TODAY
     ticker_data.reset_index(inplace=True)  # put date in the first column
     ticker_data["Date"] = pd.to_datetime(ticker_data["Date"]).dt.tz_localize(None)
+    ticker_data.columns = ticker_data.columns.get_level_values('Price')
     return ticker_data
 
 
@@ -65,6 +69,7 @@ def generate_forecast_data(data, n_years):
     df_train = df_train.rename(
         columns={"Date": "ds", "Close": "y"}
     )  # This is the format that Prophet accepts
+    df_train.columns = ['ds', 'y']
 
     m = Prophet()
     m.fit(df_train)
@@ -119,6 +124,7 @@ if __name__ == "__main__":
 
     #### Getting the data, make initial forcast and build a front end web-app with Taipy GUI
     data = get_stock_data(selected_stock, start_date, end_date)
+    print(data.head())
     forecast = generate_forecast_data(data, n_years)
 
     show_dialog = False
@@ -215,3 +221,4 @@ Select number of prediction years: <|{n_years}|>
     gui = Gui(page)
     partial = gui.add_partial(partial_md)
     gui.run(dark_mode=False, title="Stock Visualization")
+

@@ -4,4 +4,5 @@ yfinance==0.2.54
 holidays==0.59
 plotly
 prophet==1.1.6
+cmdstanpy==1.2.5
 curl_cffi
